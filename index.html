@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema eliminacode</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    }
+    .header {
+      background: #111827;
+      color: white;
+      padding: 24px;
+    }
+    .header p {
+      margin: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      opacity: 0.7;
+    }
+    .header h1 {
+      margin: 10px 0 0;
+      font-size: 28px;
+    }
+    .content {
+      padding: 24px;
+    }
+    .ticket {
+      border: 2px dashed #d1d5db;
+      background: #f9fafb;
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .ticket small, .meta, .note {
+      color: #6b7280;
+    }
+    .ticket-number {
+      font-size: 64px;
+      font-weight: bold;
+      margin: 10px 0;
+      letter-spacing: 0.08em;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .box {
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid;
+    }
+    .box p {
+      margin: 0;
+      font-size: 14px;
+    }
+    .box strong {
+      display: block;
+      font-size: 34px;
+      margin-top: 10px;
+    }
+    .amber {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+    .red {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #991b1b;
+    }
+    .estimate {
+      background: #111827;
+      color: white;
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .estimate p {
+      margin: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      opacity: 0.7;
+    }
+    .estimate strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 42px;
+    }
+    .rules {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .rules div { margin-bottom: 8px; }
+    .rules div:last-child { margin-bottom: 0; }
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 20px 0;
+      padding: 24px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+    }
+    .spinner {
+      width: 38px;
+      height: 38px;
+      border: 4px solid #d1d5db;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loading-text {
+      font-size: 14px;
+      color: #4b5563;
+      text-align: center;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    button {
+      width: 100%;
+      border: 0;
+      background: #2563eb;
+      color: white;
+      border-radius: 18px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    #bookButton, #printButton, #urgentButton {
+      margin-top: 0;
+    }
+    #urgentButton {
+      margin-bottom: 20px;
+      background: #dc2626;
+    }
+    #urgentButton:hover {
+      background: #b91c1c;
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .card { box-shadow: none; border: 0; max-width: 100%; }
+      button { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <p>Consulenza Marco Ronzano</p>
+      <h1>Sistema prenotazione consulenza</h1>
+    </div>
+
+    <div class="content">
+      <div id="bookingState">
+        <div class="ticket">
+          <small>Prenotazione consulenza</small>
+          <div style="font-size: 22px; font-weight: bold; margin: 12px 0;">Richiedi un ticket</div>
+          <div class="meta">Premi il pulsante qui sotto e attendi l'assegnazione della posizione in coda.</div>
+        </div>
+
+        <button id="bookButton" style="margin-bottom: 20px;">Prenota ora</button>
+
+        <div class="loading" id="loadingState" style="display: none;">
+          <div class="spinner"></div>
+          <div class="loading-text">Calcolo posizione in coda in corso...</div>
+        </div>
+      </div>
+
+      <div id="resultState" style="display: none;">
+        <div class="ticket">
+          <small>Il tuo ticket</small>
+          <div class="ticket-number" id="ticketNumber">A000</div>
+          <div class="meta">Emesso alle <span id="issueTime"></span></div>
+        </div>
+
+        <div class="stats">
+          <div class="box amber">
+            <p>Persone prima di te</p>
+            <strong id="peopleAhead">0</strong>
+          </div>
+          <div class="box red">
+            <p>Attesa stimata</p>
+            <strong><span id="waitMinutes">0</span> min</strong>
+          </div>
+        </div>
+
+        <div class="estimate">
+          <p>Orario stimato</p>
+          <strong id="estimatedTime">00:00</strong>
+        </div>
+        <button id="urgentButton">È urgente</button>
+      </div>
+
+      <div class="rules">
+        <div>• Dopo la prenotazione il sistema elabora la richiesta prima di assegnare il ticket.</div>
+        <div>• I ticket saltati non vengono richiamati.</div>
+        <div>• Le urgenze non autorizzano il sorpasso della coda. Marco decide quando è il tuo turno.</div>
+      </div>
+
+      <button id="printButton" style="display: none;">Stampa ticket</button>
+    </div>
+  </div>
+
+  <script>
+    let currentWaitMinutes = 0;
+
+    function pad(num, size) {
+      return String(num).padStart(size, '0');
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString('it-IT', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function generateTicket(waitOverride) {
+      const now = new Date();
+      const baseQueue = 37;
+      const randomOffset = Math.floor(Math.random() * 18);
+      const peopleAhead = baseQueue + randomOffset;
+      const calculatedWaitMinutes = peopleAhead * 4 + Math.floor(Math.random() * 11);
+      const waitMinutes = typeof waitOverride === 'number' ? waitOverride : calculatedWaitMinutes;
+      const ticketNumber = 'A' + pad(240 + Math.floor(Math.random() * 70), 3);
+      const estimatedDate = new Date(now.getTime() + waitMinutes * 60000);
+
+      currentWaitMinutes = waitMinutes;
+
+      document.getElementById('ticketNumber').textContent = ticketNumber;
+      document.getElementById('issueTime').textContent = formatTime(now);
+      document.getElementById('peopleAhead').textContent = peopleAhead;
+      document.getElementById('waitMinutes').textContent = waitMinutes;
+      document.getElementById('estimatedTime').textContent = formatTime(estimatedDate);
+    }
+
+    document.getElementById('bookButton').addEventListener('click', function () {
+      document.getElementById('bookButton').style.display = 'none';
+      document.getElementById('loadingState').style.display = 'flex';
+
+      setTimeout(function () {
+        generateTicket();
+        document.getElementById('bookingState').style.display = 'none';
+        document.getElementById('resultState').style.display = 'block';
+        document.getElementById('printButton').style.display = 'block';
+      }, 5000);
+    });
+
+    document.getElementById('urgentButton').addEventListener('click', function () {
+      const urgentButton = document.getElementById('urgentButton');
+      const printButton = document.getElementById('printButton');
+      const currentTicket = document.getElementById('ticketNumber').textContent;
+      const increasedWait = Math.ceil(currentWaitMinutes * 1.1);
+
+      urgentButton.style.display = 'none';
+      printButton.style.display = 'none';
+      document.getElementById('resultState').style.display = 'none';
+      document.getElementById('loadingState').style.display = 'flex';
+      document.getElementById('bookingState').style.display = 'block';
+
+      setTimeout(function () {
+        generateTicket(increasedWait);
+        document.getElementById('ticketNumber').textContent = currentTicket;
+        document.getElementById('bookingState').style.display = 'none';
+        document.getElementById('resultState').style.display = 'block';
+        document.getElementById('loadingState').style.display = 'none';
+        printButton.style.display = 'block';
+        urgentButton.style.display = 'block';
+      }, 5000);
+    });
+
+    document.getElementById('printButton').addEventListener('click', function () {
+      window.print();
+    });
+  </script>
+</body>
+</html>
